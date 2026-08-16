@@ -153,3 +153,72 @@ export const generateFlashcards = async (text) => {
         throw error;
     }
 };
+
+export const embedText = async (text) => {
+    try {
+        const ai = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY,
+        });
+
+        const response = await ai.models.embedContent({
+            model: "gemini-embedding-001",
+            contents: [{ text }],
+            config: {
+                outputDimensionality: 768,
+            },
+        });
+
+        return response.embeddings[0].values;
+    } catch (error) {
+        console.error("Error embedding text with Gemini:", error);
+        throw error;
+    }
+};
+
+export const chatWithContext = async (
+    question,
+    contextChunks,
+    history = []
+) => {
+    try {
+        const ai = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY,
+        });
+
+        const context = contextChunks
+            .map((c, i) => `[Chunk ${i + 1}]\n${c.text}`)
+            .join("\n\n");
+
+        const historyText = history
+            .map(
+                (m) =>
+                    `${m.role === "user" ? "Student" : "Assistant"}: ${m.content}`
+            )
+            .join("\n");
+
+        const prompt = `
+        You are a helpful study assistant. Answer the student's question using ONLY the provided context from their study material.
+        If the answer is not in the context, say you couldn't find it in the material rather than making something up.
+        Be clear, accurate, and explain in a way that helps the student learn.
+
+        CONTEXT FROM STUDY MATERIAL:
+        ${context}
+
+        ${historyText ? `CONVERSATION SO FAR:\n${historyText}\n` : ""}
+
+        STUDENT'S QUESTION: ${question}
+
+        Answer:
+        `;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: [{ text: prompt }],
+        });
+
+        return response.text.trim();
+    } catch (error) {
+        console.error("Error in chatWithContext with Gemini:", error);
+        throw error;
+    }
+};

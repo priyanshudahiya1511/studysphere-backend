@@ -5,6 +5,32 @@ import {
 } from "../utils/cloudinary.js";
 import { extractText } from "../utils/extractText.js";
 import fs from "fs";
+import DocumentChunk from "../models/documentChunk.model.js";
+import { chunkText } from "../utils/chunkText.js";
+import { embedText } from "../utils/gemini.js";
+
+const processDocumentChunks = async (documentId, ownerId, text) => {
+    const chunks = chunkText(text, 300, 50);
+
+    const chunkDocs = [];
+
+    for (let i = 0; i < chunks.length; i++) {
+        const embedding = await embedText(chunks[i]);
+        chunkDocs.push({
+            owner: ownerId,
+            document: documentId,
+            chunkIndex: i,
+            text: chunks[i],
+            embedding,
+        });
+    }
+
+    if (chunkDocs.length > 0) {
+        await DocumentChunk.insertMany(chunkDocs);
+    }
+
+    return chunkDocs.length;
+};
 
 export const uploadDocument = async (req, res) => {
     try {
@@ -39,9 +65,26 @@ export const uploadDocument = async (req, res) => {
             extractedText,
         });
 
+        let chunkCount = 0;
+        if (extractedText && extractedText.trim() !== "") {
+            try {
+                chunkCount = await processDocumentChunks(
+                    document._id,
+                    req.user._id,
+                    extractedText
+                );
+            } catch (embedError) {
+                console.log(
+                    "Chunk/embed error (document still saved):",
+                    embedError.message
+                );
+            }
+        }
+
         return res.status(201).json({
             message: "Document uploaded successfully",
             document,
+            chunksProcessed: chunkCount,
         });
     } catch (error) {
         if (req.file?.path && fs.existsSync(req.file.path)) {
