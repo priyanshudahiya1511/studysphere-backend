@@ -52,3 +52,55 @@ export const summarizeText = async (text) => {
         throw error;
     }
 };
+
+export const generateQuiz = async (text, numQuestions) => {
+    try {
+        const ai = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY,
+        });
+
+        const prompt = `
+        You are a helpful study assistant that creates multiple-choice quizzes.
+        Based on the following study material, generate exactly ${numQuestions} multiple-choice questions.
+        Each question must have exactly 4 options, with exactly one correct answer.
+        Vary the difficulty and cover different parts of the material.
+
+        Respond ONLY in this JSON format, no extra text, no markdown backticks:
+        {
+            "title": "<a short title for this quiz>",
+            "questions": [
+                {
+                    "question": "<the question text>",
+                    "options": ["<option A>", "<option B>", "<option C>", "<option D>"],
+                    "correctAnswer": <index 0-3 of the correct option>,
+                    "explanation": "<a short explanation of why the answer is correct>"
+                }
+            ]
+        }
+
+        Guidelines:
+        - Generate exactly ${numQuestions} questions.
+        - Each question must have exactly 4 options.
+        - correctAnswer is the array index (0, 1, 2, or 3) of the correct option.
+        - Base every question strictly on the provided material.
+
+        Here is the study material: ${text}
+        `;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: [{ text: prompt }],
+        });
+
+        const cleaned = response.text.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+
+        return {
+            title: parsed.title || "",
+            questions: parsed.questions || [],
+        };
+    } catch (error) {
+        console.error("Error generating quiz with Gemini:", error);
+        throw error;
+    }
+};

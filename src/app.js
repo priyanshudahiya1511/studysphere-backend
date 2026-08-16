@@ -24,10 +24,12 @@ import authRoutes from "./routes/auth.routes.js";
 import noteRoutes from "./routes/note.routes.js";
 import documentRoutes from "./routes/document.routes.js";
 import summaryRoutes from "./routes/summary.routes.js";
+import quizRoutes from "./routes/quiz.routes.js";
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/notes", noteRoutes);
 app.use("/api/v1/documents", documentRoutes);
 app.use("/api/v1/summaries", summaryRoutes);
+app.use("/api/v1/quizzes", quizRoutes);
 
 export default app;
