@@ -104,3 +104,52 @@ export const generateQuiz = async (text, numQuestions) => {
         throw error;
     }
 };
+
+export const generateFlashcards = async (text) => {
+    try {
+        const ai = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY,
+        });
+
+        const prompt = `
+        You are a helpful study assistant that creates flashcards for active recall.
+        Based on the following study material, generate exactly 10 flashcards.
+        Each flashcard has a "front" (a term, concept, or question) and a "back" (the answer or definition).
+        Keep the front concise and the back clear and complete but not too long.
+
+        Respond ONLY in this JSON format, no extra text, no markdown backticks:
+        {
+            "title": "<a short title for this flashcard set>",
+            "cards": [
+                {
+                    "front": "<term, concept, or question>",
+                    "back": "<the answer or definition>"
+                }
+            ]
+        }
+
+        Guidelines:
+        - Generate exactly 10 flashcards.
+        - Cover the most important concepts from the material.
+        - Base every card strictly on the provided material.
+
+        Here is the study material: ${text}
+        `;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: [{ text: prompt }],
+        });
+
+        const cleaned = response.text.replace(/```json|```/g, "").trim();
+        const parsed = JSON.parse(cleaned);
+
+        return {
+            title: parsed.title || "",
+            cards: parsed.cards || [],
+        };
+    } catch (error) {
+        console.error("Error generating flashcards with Gemini:", error);
+        throw error;
+    }
+};

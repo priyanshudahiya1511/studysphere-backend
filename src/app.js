@@ -25,11 +25,13 @@ import noteRoutes from "./routes/note.routes.js";
 import documentRoutes from "./routes/document.routes.js";
 import summaryRoutes from "./routes/summary.routes.js";
 import quizRoutes from "./routes/quiz.routes.js";
+import flashcardRoutes from "./routes/flashcard.routes.js";
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/notes", noteRoutes);
 app.use("/api/v1/documents", documentRoutes);
 app.use("/api/v1/summaries", summaryRoutes);
 app.use("/api/v1/quizzes", quizRoutes);
+app.use("/api/v1/flashcards", flashcardRoutes);
 
 export default app;
