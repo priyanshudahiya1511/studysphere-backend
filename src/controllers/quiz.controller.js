@@ -2,6 +2,7 @@ import Note from "../models/note.model.js";
 import Quiz from "../models/quiz.model.js";
 import Document from "../models/document.model.js";
 import { generateQuiz } from "../utils/gemini.js";
+import QuizAttempt from "../models/quizAttempt.model.js";
 
 const getSourceText = async (sourceType, sourceId, userId) => {
     if (sourceType === "note") {
@@ -178,6 +179,14 @@ export const submitQuiz = async (req, res) => {
 
         const total = quiz.questions.length;
         const percentage = Math.round((score / total) * 100);
+
+        await QuizAttempt.create({
+            owner: req.user._id,
+            quiz: quiz._id,
+            score,
+            total,
+            percentage,
+        });
 
         return res.status(200).json({
             message: "Quiz submitted successfully",

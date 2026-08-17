@@ -28,6 +28,7 @@ import quizRoutes from "./routes/quiz.routes.js";
 import flashcardRoutes from "./routes/flashcard.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import plannerTaskRoutes from "./routes/plannerTask.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/notes", noteRoutes);
@@ -37,5 +38,6 @@ app.use("/api/v1/quizzes", quizRoutes);
 app.use("/api/v1/flashcards", flashcardRoutes);
 app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/planner", plannerTaskRoutes);
+app.use("/api/v1/analytics", analyticsRoutes);
 
 export default app;
