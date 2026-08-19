@@ -3,6 +3,10 @@ import User from "../models/user.model.js";
 import { generateOTP, sendVerificationEmail } from "../utils/sendEmail.js";
 import { saveOtp, getOTP, deleteOTP } from "../utils/otpStore.js";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
+import axios from "axios";
+
+const client = new OAuth2Client();
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -352,6 +356,115 @@ export const refreshAccessToken = async (req, res) => {
         });
     } catch (error) {
         console.log("Error in refreshAccessToken", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const resendOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+        const normalizedEmail = email.toLowerCase().trim();
+        const existing = getOTP(normalizedEmail);
+
+        if (!existing) {
+            return res.status(404).json({
+                message:
+                    "No pending registration found. Please register again.",
+            });
+        }
+
+        const otp = generateOTP();
+        const hashedOtp = await bcrypt.hash(otp, 10);
+
+        saveOtp(normalizedEmail, hashedOtp, existing.userData);
+        await sendVerificationEmail(normalizedEmail, otp);
+
+        return res.status(200).json({ message: "OTP resent to email" });
+    } catch (error) {
+        console.log("Resend OTP error:", error.message);
+        return res.status(500).json({ message: "Something went wrong" });
+    }
+};
+
+export const googleAuth = async (req, res) => {
+    try {
+        const { googleToken } = req.body;
+        if (!googleToken) {
+            return res
+                .status(400)
+                .json({ message: "Google token is required" });
+        }
+
+        let name, email, googleId;
+
+        const isToken = googleToken.split(".").length === 3;
+
+        if (isToken) {
+            const ticket = await client.verifyIdToken({
+                idToken: googleToken,
+                audience: [
+                    process.env.GOOGLE_WEB_CLIENT_ID,
+                    process.env.GOOGLE_ANDROID_CLIENT_ID,
+                    process.env.GOOGLE_IOS_CLIENT_ID,
+                ],
+            });
+
+            const payload = ticket.getPayload();
+            name = payload.name;
+            email = payload.email;
+            googleId = payload.sub;
+        } else {
+            const { data } = await axios.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                { headers: { Authorization: `Bearer ${googleToken}` } }
+            );
+
+            if (!data.email_verified) {
+                return res
+                    .status(401)
+                    .json({ message: "Google email is not verified" });
+            }
+
+            name = data.name;
+            email = data.email;
+            googleId = data.sub;
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        let user = await User.findOne({ email: normalizedEmail });
+
+        if (!user) {
+            user = await User.create({
+                name,
+                email: normalizedEmail,
+                googleId,
+                password: googleId,
+                isVerified: true,
+            });
+        } else if (!user.googleId) {
+            user.googleId = googleId;
+            await user.save({ validateBeforeSave: false });
+        }
+
+        const { accessToken, refreshToken } =
+            await generateAccessAndRefreshToken(user._id);
+        const userData = await User.findById(user._id).select(
+            "-password -refreshToken"
+        );
+
+        return res.status(200).json({
+            message: "Google login successful",
+            user: userData,
+            accessToken,
+            refreshToken,
+        });
+    } catch (error) {
+        console.log("Error in googleAuth", error);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
