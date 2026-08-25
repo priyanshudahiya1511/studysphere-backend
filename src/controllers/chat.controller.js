@@ -27,7 +27,7 @@ export const startChat = async (req, res) => {
         if (existingSession) {
             return res.status(200).json({
                 message: "Existing chat session retrieved",
-                session,
+                session: existingSession,
             });
         }
 
