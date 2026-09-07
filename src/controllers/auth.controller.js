@@ -189,7 +189,7 @@ export const logoutUser = async (req, res) => {
 
         const user = await User.findByIdAndUpdate(
             userId,
-            { $unset: { refreshToken: 1 } },
+            { $unset: { refreshToken: 1, fcmToken: 1 } },
             { new: true }
         );
         if (!user) {
