@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema(
             enum: ["free", "premium"],
             default: "free",
         },
+        fcmToken: {
+            type: String,
+            default: null,
+        },
     },
     {
         timestamps: true,

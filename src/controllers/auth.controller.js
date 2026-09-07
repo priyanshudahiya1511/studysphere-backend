@@ -468,3 +468,20 @@ export const googleAuth = async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+export const saveFcmToken = async (req, res) => {
+    try {
+        const { fcmToken } = req.body;
+
+        if (!fcmToken) {
+            return res.status(400).json({ message: "fcmToken is required" });
+        }
+
+        await User.findByIdAndUpdate(req.user._id, { fcmToken });
+
+        return res.status(200).json({ message: "FCM token saved" });
+    } catch (error) {
+        console.log("Error in saveFcmToken", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};

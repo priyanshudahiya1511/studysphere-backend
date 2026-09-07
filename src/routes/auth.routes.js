@@ -10,6 +10,7 @@ import {
     refreshAccessToken,
     resendOtp,
     googleAuth,
+    saveFcmToken,
 } from "../controllers/auth.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { authLimiter } from "../middleware/rateLimiter.js";
@@ -30,5 +31,6 @@ router.post("/reset-password", authLimiter, resetPassword);
 router.post("/refresh-access-token", refreshAccessToken);
 router.post("/resend-otp", authLimiter, resendOtp);
 router.post("/google", googleAuth);
+router.post("/save-fcm-token", protectRoute, saveFcmToken);
 
 export default router;
