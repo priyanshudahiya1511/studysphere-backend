@@ -12,6 +12,7 @@ export const sendPushNotification = async (
             notification: { title, body },
             data,
         };
+        console.log("SENDING MESSAGE:", JSON.stringify(message, null, 2)); // ← add this
         const response = await admin.messaging().send(message);
         console.log("Notification sent:", response);
         return response;

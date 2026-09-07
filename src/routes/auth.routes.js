@@ -11,6 +11,7 @@ import {
     resendOtp,
     googleAuth,
     saveFcmToken,
+    sendTestNotification,
 } from "../controllers/auth.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { authLimiter } from "../middleware/rateLimiter.js";
@@ -32,5 +33,6 @@ router.post("/refresh-access-token", refreshAccessToken);
 router.post("/resend-otp", authLimiter, resendOtp);
 router.post("/google", googleAuth);
 router.post("/save-fcm-token", protectRoute, saveFcmToken);
+router.post("/send-test-notification", protectRoute, sendTestNotification);
 
 export default router;

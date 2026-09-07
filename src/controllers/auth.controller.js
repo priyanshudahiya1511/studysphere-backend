@@ -485,3 +485,29 @@ export const saveFcmToken = async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+import { sendPushNotification } from "../utils/sendNotifications.js";
+
+export const sendTestNotification = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+
+        if (!user.fcmToken) {
+            return res
+                .status(400)
+                .json({ message: "No FCM token for this user" });
+        }
+
+        await sendPushNotification(
+            user.fcmToken,
+            "Task Reminder",
+            "You have a task due today!",
+            { screen: "planner" } // ← the data that drives navigation on tap
+        );
+
+        return res.status(200).json({ message: "Test notification sent" });
+    } catch (error) {
+        console.log("Error in sendTestNotification", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
