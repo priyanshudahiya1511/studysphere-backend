@@ -11,6 +11,13 @@ export const sendPushNotification = async (
             token: fcmToken,
             notification: { title, body },
             data,
+            android: {
+                priority: "high",
+                notification: {
+                    channelId: "default",
+                    sound: "default",
+                },
+            },
         };
         console.log("SENDING MESSAGE:", JSON.stringify(message, null, 2)); // ← add this
         const response = await admin.messaging().send(message);
