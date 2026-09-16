@@ -5,11 +5,12 @@ const withRetry = async (fn, retries = 3, delayMs = 2000) => {
         try {
             return await fn();
         } catch (error) {
-            if ((error?.status = 503 && attempt < retries)) {
+            if (error?.status === 503 && attempt < retries) {
                 console.log(
                     `Gemini 503 (attempt ${attempt}/${retries}), retrying in ${delayMs}ms...`
                 );
                 await new Promise((res) => setTimeout(res, delayMs));
+                continue;
             }
             throw error;
         }
