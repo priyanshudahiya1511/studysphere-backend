@@ -1,5 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 
+const withRetry = async (fn, retries = 3, delayMs = 2000) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if ((error?.status = 503 && attempt < retries)) {
+                console.log(
+                    `Gemini 503 (attempt ${attempt}/${retries}), retrying in ${delayMs}ms...`
+                );
+                await new Promise((res) => setTimeout(res, delayMs));
+            }
+            throw error;
+        }
+    }
+};
+
 export const summarizeText = async (text) => {
     try {
         const ai = new GoogleGenAI({
@@ -33,10 +49,12 @@ export const summarizeText = async (text) => {
         Here is the study material: ${text}
         `;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-3.8-flash",
-            contents: [{ text: prompt }],
-        });
+        const response = await withRetry(() =>
+            ai.models.generateContent({
+                model: "gemini-3.8-flash",
+                contents: [{ text: prompt }],
+            })
+        );
 
         const cleaned = response.text.replace(/```json|```/g, "").trim();
         const parsed = JSON.parse(cleaned);
@@ -87,10 +105,12 @@ export const generateQuiz = async (text, numQuestions) => {
         Here is the study material: ${text}
         `;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-3.8-flash",
-            contents: [{ text: prompt }],
-        });
+        const response = await withRetry(() =>
+            ai.models.generateContent({
+                model: "gemini-3.8-flash",
+                contents: [{ text: prompt }],
+            })
+        );
 
         const cleaned = response.text.replace(/```json|```/g, "").trim();
         const parsed = JSON.parse(cleaned);
@@ -136,10 +156,12 @@ export const generateFlashcards = async (text) => {
         Here is the study material: ${text}
         `;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-3.8-flash",
-            contents: [{ text: prompt }],
-        });
+        const response = await withRetry(() =>
+            ai.models.generateContent({
+                model: "gemini-3.8-flash",
+                contents: [{ text: prompt }],
+            })
+        );
 
         const cleaned = response.text.replace(/```json|```/g, "").trim();
         const parsed = JSON.parse(cleaned);
@@ -211,10 +233,12 @@ export const chatWithContext = async (
         Answer:
         `;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-3.8-flash",
-            contents: [{ text: prompt }],
-        });
+        const response = await withRetry(() =>
+            ai.models.generateContent({
+                model: "gemini-3.8-flash",
+                contents: [{ text: prompt }],
+            })
+        );
 
         return response.text.trim();
     } catch (error) {
