@@ -52,7 +52,7 @@ export const summarizeText = async (text) => {
 
         const response = await withRetry(() =>
             ai.models.generateContent({
-                model: "gemini-3.8-flash",
+                model: "gemini-3.5-flash",
                 contents: [{ text: prompt }],
             })
         );
@@ -108,7 +108,7 @@ export const generateQuiz = async (text, numQuestions) => {
 
         const response = await withRetry(() =>
             ai.models.generateContent({
-                model: "gemini-3.8-flash",
+                model: "gemini-3.5-flash",
                 contents: [{ text: prompt }],
             })
         );
@@ -159,7 +159,7 @@ export const generateFlashcards = async (text) => {
 
         const response = await withRetry(() =>
             ai.models.generateContent({
-                model: "gemini-3.8-flash",
+                model: "gemini-3.5-flash",
                 contents: [{ text: prompt }],
             })
         );
@@ -236,7 +236,7 @@ export const chatWithContext = async (
 
         const response = await withRetry(() =>
             ai.models.generateContent({
-                model: "gemini-3.8-flash",
+                model: "gemini-3.5-flash",
                 contents: [{ text: prompt }],
             })
         );
