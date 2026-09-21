@@ -1,5 +1,13 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
+import Document from "../models/document.model.js";
+import Summary from "../models/summary.model.js";
+import Quiz from "../models/quiz.model.js";
+import QuizAttempt from "../models/quizAttempt.model.js";
+import FlashcardSet from "../models/flashcard.model.js";
+import ChatSession from "../models/chatSession.model.js";
+import PlannerTask from "../models/plannerTask.model.js";
+import Note from "../models/note.model.js";
 import { generateOTP, sendVerificationEmail } from "../utils/sendEmail.js";
 import { saveOtp, getOTP, deleteOTP } from "../utils/otpStore.js";
 import jwt from "jsonwebtoken";
@@ -482,6 +490,32 @@ export const saveFcmToken = async (req, res) => {
         return res.status(200).json({ message: "FCM token saved" });
     } catch (error) {
         console.log("Error in saveFcmToken", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const deleteAccount = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        await Promise.all([
+            Document.deleteMany({ owner: userId }),
+            Summary.deleteMany({ owner: userId }),
+            Quiz.deleteMany({ owner: userId }),
+            QuizAttempt.deleteMany({ owner: userId }),
+            FlashcardSet.deleteMany({ owner: userId }),
+            ChatSession.deleteMany({ owner: userId }),
+            PlannerTask.deleteMany({ owner: userId }),
+            Note.deleteMany({ owner: userId }),
+        ]);
+
+        await User.findByIdAndDelete(userId);
+
+        return res
+            .status(200)
+            .json({ message: "Account deleted successfully" });
+    } catch (error) {
+        console.log("Error in deleteAccount", error);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };

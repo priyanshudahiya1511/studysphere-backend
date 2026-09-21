@@ -11,6 +11,7 @@ import {
     resendOtp,
     googleAuth,
     saveFcmToken,
+    deleteAccount,
 } from "../controllers/auth.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { authLimiter } from "../middleware/rateLimiter.js";
@@ -32,5 +33,6 @@ router.post("/refresh-access-token", refreshAccessToken);
 router.post("/resend-otp", authLimiter, resendOtp);
 router.post("/google", googleAuth);
 router.post("/save-fcm-token", protectRoute, saveFcmToken);
+router.delete("/delete-account", protectRoute, deleteAccount);
 
 export default router;
